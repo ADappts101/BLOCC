@@ -1,6 +1,6 @@
 const canvas = document.getElementById("cubeCanvas");
 const ctx = canvas.getContext("2d");
-const size = 100;
+const size = 10;
 
 let rotX = 35.264 * Math.PI / 180;
 let rotY = 45 * Math.PI / 180;
