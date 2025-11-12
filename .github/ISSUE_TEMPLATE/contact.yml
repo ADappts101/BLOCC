@@ -1,0 +1,26 @@
+name: Contact Message
+description: Send a message directly to ADappts101
+title: "Contact: [Your Name Here]"
+labels: ["contact"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Your Name
+      placeholder: e.g. Alex
+    validations:
+      required: true
+  - type: input
+    id: email
+    attributes:
+      label: Your Email
+      placeholder: e.g. alex@email.com
+    validations:
+      required: true
+  - type: textarea
+    id: message
+    attributes:
+      label: Your Message
+      placeholder: Type your message here...
+    validations:
+      required: true
