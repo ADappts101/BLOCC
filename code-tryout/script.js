@@ -11,13 +11,17 @@ const verts = [
   [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]
 ];
 
-// edges: connect vertex indices
-const edges = [
-  [0,1],[1,2],[2,3],[3,0],
-  [4,5],[5,6],[6,7],[7,4],
-  [0,4],[1,5],[2,6],[3,7]
+// each face uses 4 vertices (in order)
+const faces = [
+  [0,1,2,3], // back
+  [4,5,6,7], // front
+  [0,1,5,4], // bottom
+  [3,2,6,7], // top
+  [1,2,6,5], // right
+  [0,3,7,4]  // left
 ];
 
+// rotation helpers
 function rotateY(v, a) {
   const [x,y,z] = v;
   return [
@@ -26,7 +30,6 @@ function rotateY(v, a) {
     -x*Math.sin(a) + z*Math.cos(a)
   ];
 }
-
 function rotateX(v, a) {
   const [x,y,z] = v;
   return [
@@ -36,37 +39,57 @@ function rotateX(v, a) {
   ];
 }
 
+// orthographic projection
 function project([x,y,z]) {
-  // orthographic projection
   return [x, y];
 }
 
 function drawCube() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const projected = verts.map(v => {
+
+  // rotate all vertices
+  const rotated = verts.map(v => {
     let r = rotateY(v, rotY);
     r = rotateX(r, rotX);
-    const [px, py] = project(r);
-    return [
-      canvas.width/2 + px * size,
-      canvas.height/2 - py * size
-    ];
+    return r;
   });
 
-  ctx.strokeStyle = "#0f0";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (const [a,b] of edges) {
-    const [x1,y1] = projected[a];
-    const [x2,y2] = projected[b];
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(x2,y2);
+  // sort faces back-to-front using average z
+  const sortedFaces = faces.slice().sort((a,b) => {
+    const za = a.map(i => rotated[i][2]).reduce((s,z)=>s+z)/4;
+    const zb = b.map(i => rotated[i][2]).reduce((s,z)=>s+z)/4;
+    return zb - za; // draw far → near
+  });
+
+  // draw faces
+  for (const face of sortedFaces) {
+    const pts = face.map(i => {
+      const [x,y,z] = rotated[i];
+      const [px, py] = project([x,y,z]);
+      return [
+        canvas.width/2 + px * size,
+        canvas.height/2 - py * size
+      ];
+    });
+
+    // brightness based on average z (fake lighting)
+    const avgZ = face.map(i => rotated[i][2]).reduce((s,z)=>s+z)/4;
+    const brightness = 120 + avgZ * 60; // tweak
+    ctx.fillStyle = `rgb(0,${Math.max(0,Math.min(255,brightness))},0)`;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#0f0";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
-  ctx.stroke();
 }
 
 drawCube();
 
+// camera preset keys
 window.addEventListener("keydown", e => {
   if (e.key === "1") { rotX = 35.264 * Math.PI / 180; rotY = 45 * Math.PI / 180; } // iso
   if (e.key === "2") { rotX = 0; rotY = 0; }   // front
