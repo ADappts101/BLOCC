@@ -36,9 +36,9 @@ function rotateX(v, a) {
   ];
 }
 
-function project([x,y,z]) {
-  // orthographic projection
-  return [x, y];
+function project([x, y, z]) {
+  const scale = 300 / (z + 5);
+  return [x * scale, y * scale];
 }
 
 function drawCube() {
